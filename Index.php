@@ -4,22 +4,18 @@ require_once 'classes/Database.php';
 require_once 'classes/Dice.php';
 require_once 'classes/Game.php';
 
-// Inicializar juego
 $db = new Database();
 $game = new Game();
 
-// Cargar estado del juego desde sesión si existe
 if (isset($_SESSION['game_data'])) {
     $game->setFromSession($_SESSION['game_data']);
 }
 
-// Procesar turno
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['play_turn'])) {
     $game->playTurn();
     $_SESSION['game_data'] = $game->toSession();
 }
 
-// Guardar puntuación
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_score'])) {
     if ($game->isGameOver() && $game->getWinner()) {
         $db->saveScore($_POST['player_name'], $game->getScores()[$game->getWinner() - 1]);
@@ -29,14 +25,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_score'])) {
     }
 }
 
-// Reiniciar juego
 if (isset($_GET['restart'])) {
     session_destroy();
     header("Location: ".$_SERVER['PHP_SELF']);
     exit();
 }
 
-// Obtener puntuaciones altas
 $highScores = $db->getHighScores();
 ?>
 <!DOCTYPE html>
@@ -47,6 +41,10 @@ $highScores = $db->getHighScores();
     <title>Juego de Cubilete Premium</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/styles.css">
+    <audio id="backgroundMusic" loop>
+    <source src="<?= AUDIO_PATH ?>bg.mp3" type="audio/mpeg">
+    Tu navegador no soporta el elemento de audio.
+</audio>
 </head>
 <body>
     <div class="welcome-animation">
@@ -150,13 +148,11 @@ $highScores = $db->getHighScores();
         </div>
     </div>
     
-    <!-- Controles de audio -->
     <div class="audio-controls">
         <button id="toggleMusic" class="btn-audio">🔊 Música</button>
         <button id="toggleSounds" class="btn-audio">🎵 Sonidos</button>
     </div>
     
-    <!-- Elementos de audio -->
     <audio id="backgroundMusic" loop>
         <source src="<?= AUDIO_PATH ?>bg.mp3" type="audio/mpeg">
     </audio>
@@ -168,5 +164,16 @@ $highScores = $db->getHighScores();
     </audio>
     
     <script src="assets/js/game.js"></script>
+    <script>
+document.addEventListener('click', function() {
+    const bgMusic = document.getElementById('backgroundMusic');
+    bgMusic.play().catch(e => console.log('Audio error:', e));
+}, { once: true });
+</script><script>
+document.addEventListener('click', function() {
+    const bgMusic = document.getElementById('backgroundMusic');
+    bgMusic.play().catch(e => console.log('Audio error:', e));
+}, { once: true });
+</script>
 </body>
 </html>

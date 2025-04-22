@@ -32,7 +32,14 @@ body {
     justify-content: center;
     align-items: center;
     z-index: 1000;
-    animation: fadeOut 1.5s ease-in-out 2s forwards;
+    animation: welcomeFade 19s ease-in-out forwards;
+}
+
+@keyframes welcomeFade {
+    0% { opacity: 1; }
+    80% { opacity: 1; transform: scale(1); }
+    90% { opacity: 0.5; transform: scale(1.1); }
+    100% { opacity: 0; visibility: hidden; transform: scale(1.2); }
 }
 
 .welcome-message {
@@ -40,18 +47,33 @@ body {
     font-size: 3rem;
     font-weight: bold;
     text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
-    animation: bounce 1s infinite alternate;
+    animation: welcomeBounce 2s infinite alternate;
 }
 
-@keyframes fadeOut {
-    to { opacity: 0; visibility: hidden; }
+@keyframes welcomeBounce {
+    from { transform: translateY(0) scale(1); }
+    to { transform: translateY(-20px) scale(1.05); }
 }
 
-@keyframes bounce {
-    from { transform: translateY(0); }
-    to { transform: translateY(-20px); }
+
+.container {
+    display: none;
+    max-width: 900px;
+    margin: 0 auto;
+    background-color: white;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    position: relative;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeIn 0.5s ease-out forwards;
 }
 
+@keyframes fadeIn {
+    to { opacity: 1; transform: translateY(0); }
+}
 .container {
     max-width: 900px;
     margin: 0 auto;
@@ -383,7 +405,6 @@ tr:hover {
     transform: scale(1.05);
 }
 
-/* Efecto de volteo del vaso */
 @keyframes flipCup {
     0% { transform: rotateX(20deg); }
     50% { transform: rotateX(160deg); }

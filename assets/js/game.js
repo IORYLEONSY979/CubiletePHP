@@ -1,88 +1,128 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Esperar a que termine la animación de bienvenida
-    setTimeout(() => {
-        // Inicializar elementos de audio
-        const bgMusic = document.getElementById('backgroundMusic');
-        const diceSound = document.getElementById('diceSound');
-        const winSound = document.getElementById('winSound');
-        
-        // Configuración de audio del usuario
-        let musicEnabled = true;
-        let soundsEnabled = true;
-        
-        // Botones de control de audio
-        const toggleMusicBtn = document.getElementById('toggleMusic');
-        const toggleSoundsBtn = document.getElementById('toggleSounds');
-        
-        // Intentar reproducir música (necesario para políticas de autoplay)
-        const playMusic = () => {
-            if (musicEnabled) {
-                bgMusic.volume = 0.3;
-                bgMusic.play().catch(e => console.log('Autoplay prevented:', e));
-            }
-        };
-        
-        // Configurar controles de audio
+    const bgMusic = document.getElementById('backgroundMusic');
+    const diceSound = document.getElementById('diceSound');
+    const winSound = document.getElementById('winSound');
+    let musicEnabled = true;
+    let soundsEnabled = true;
+    let welcomeAnimationShown = sessionStorage.getItem('welcomeShown') === 'true';
+    const toggleMusicBtn = document.getElementById('toggleMusic');
+    const toggleSoundsBtn = document.getElementById('toggleSounds');
+    const playMusic = () => {
+        if (musicEnabled && bgMusic) {
+            bgMusic.volume = 0.3;
+            bgMusic.play().catch(e => console.log('Error al reproducir música:', e));
+        }
+    };
+    const playDiceSound = () => {
+        if (soundsEnabled && diceSound) {
+            diceSound.currentTime = 0;
+            diceSound.play().catch(e => console.log('Error al reproducir sonido de dados:', e));
+        }
+    };
+    const playWinSound = () => {
+        if (soundsEnabled && winSound) {
+            winSound.currentTime = 0;
+            winSound.play().catch(e => console.log('Error al reproducir sonido de victoria:', e));
+        }
+    };
+    if (toggleMusicBtn) {
         toggleMusicBtn.addEventListener('click', () => {
             musicEnabled = !musicEnabled;
             toggleMusicBtn.textContent = musicEnabled ? '🔊 Música' : '🔇 Música';
             if (musicEnabled) playMusic();
-            else bgMusic.pause();
+            else if (bgMusic) bgMusic.pause();
         });
-        
+    }  
+    if (toggleSoundsBtn) {
         toggleSoundsBtn.addEventListener('click', () => {
             soundsEnabled = !soundsEnabled;
             toggleSoundsBtn.textContent = soundsEnabled ? '🎵 Sonidos' : '🔇 Sonidos';
         });
-        
-        // Reproducir música al hacer clic en cualquier parte (para desbloquear autoplay)
-        document.body.addEventListener('click', () => {
+    }
+    const welcomeAnimation = document.querySelector('.welcome-animation');
+    const mainContainer = document.querySelector('.container');
+    
+    if (welcomeAnimation && mainContainer) {
+        if (!welcomeAnimationShown) {
+            setTimeout(() => {
+                welcomeAnimation.style.opacity = '0';
+                welcomeAnimation.style.pointerEvents = 'none';
+                mainContainer.style.display = 'block';
+                setTimeout(() => {
+                    welcomeAnimation.style.display = 'none';
+                }, 1000);
+                
+                sessionStorage.setItem('welcomeShown', 'true');
+                welcomeAnimationShown = true;
+                playMusic();
+            }, 19000);
+        } else {
+            welcomeAnimation.style.display = 'none';
+            mainContainer.style.display = 'block';
             playMusic();
-        }, { once: true });
-        
-        // Animación de dados
-        const dice = document.querySelectorAll('.dice');
+        }
+    }
+    const initGameAnimations = () => {
+        const diceContainer = document.querySelector('.dice-container');
         const cup = document.querySelector('.cup');
-        
-        dice.forEach((die, index) => {
-            // Retraso escalonado para la animación
-            die.style.animationDelay = `${index * 0.1}s`;
-            
-            // Remover la clase de animación después de que termine
-            die.addEventListener('animationend', function() {
-                die.classList.remove('roll-animation');
+        const dice = document.querySelectorAll('.dice');
+        if (diceContainer && cup) {
+            diceContainer.style.zIndex = '5';
+            cup.style.zIndex = '10';
+        }
+        if (dice.length > 0) {
+            dice.forEach((die, index) => {
+                die.style.animationDelay = `${index * 0.1}s`;
+                
+                die.addEventListener('animationend', function() {
+                    die.classList.remove('roll-animation');
+                });
             });
-        });
-        
-        // Animación del vaso
-        if (cup.classList.contains('shake-animation')) {
-            // Reproducir sonido de dados
-            if (soundsEnabled) {
-                diceSound.currentTime = 0;
-                diceSound.play();
-            }
+        }
+        if (cup && cup.classList.contains('shake-animation')) {
+            playDiceSound();
             
             cup.addEventListener('animationend', function() {
                 cup.classList.remove('shake-animation');
-                
-                // Añadir animación de volteo después de agitar
                 cup.classList.add('flip-animation');
-                
-                // Reproducir sonido de victoria si el juego terminó
+                cup.style.pointerEvents = 'none';
                 const winnerMessage = document.querySelector('.winner-message');
-                if (winnerMessage && soundsEnabled) {
+                if (winnerMessage) {
                     setTimeout(() => {
-                        winSound.play();
+                        playWinSound();
                     }, 500);
                 }
             });
         }
-        
-        // Animación de volteo del vaso
-        if (cup.classList.contains('flip-animation')) {
+        if (cup && cup.classList.contains('flip-animation')) {
             cup.addEventListener('animationend', function() {
                 cup.classList.remove('flip-animation');
             });
         }
-    }, 2500); // Esperar 2.5s para que termine la animación de bienvenida
+    };
+    if (welcomeAnimationShown) {
+        initGameAnimations();
+    } else {
+        const checkWelcomeEnd = setInterval(() => {
+            if (welcomeAnimationShown) {
+                clearInterval(checkWelcomeEnd);
+                initGameAnimations();
+            }
+        }, 100);
+    }
+    const gameForm = document.querySelector('form[method="POST"]');
+    if (gameForm) {
+        gameForm.addEventListener('submit', function() {
+            setTimeout(() => {
+                playDiceSound();
+            }, 300);
+        });
+    }
+    document.addEventListener('click', function enableAudio() {
+        playMusic();
+        document.removeEventListener('click', enableAudio);
+    }, { once: true });
+    document.addEventListener('click', function() {
+        playMusic();
+    }, { once: true });
 });
